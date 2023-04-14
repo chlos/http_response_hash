@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"http_response_hash/config"
+	"http_response_hash/hashing"
 )
 
 func main() {
@@ -13,6 +14,12 @@ func main() {
 		fmt.Printf("Failed to get configuration: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("limit: %d\n", config.ParallelLimit) // FIXME:
-	fmt.Printf("args: %s\n", config.URLs)           // FIXME:
+
+	h, err := hashing.NewHashing(config.ParallelLimit, config.URLs)
+	if err != nil {
+		fmt.Printf("Failed to init hashing: %v\n", err)
+		os.Exit(1)
+	}
+	h.Start()
+	h.Print()
 }
