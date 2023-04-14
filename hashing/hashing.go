@@ -1,9 +1,12 @@
 package hashing
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"net/http"
 	"sync"
 )
 
@@ -52,14 +55,34 @@ func (h *Hashing) hashURL(url string, waitCh <-chan struct{}, wg *sync.WaitGroup
 		<-waitCh
 	}() // done, free up space in the pool waiting channel for the next goroutine
 
-	// FIXME: do something
-	responseHash := getMD5Hash(url)
+	body, err := getHTTPBody(url)
+	if err != nil {
+		fmt.Printf("Hashing %s: %v\n", url, err)
+		return
+	}
+	responseHash := getMD5Hash(body)
 
 	h.hashCh <- responseHash
 }
 
-func getMD5Hash(text string) string {
+func getHTTPBody(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return []byte{}, fmt.Errorf("running GET request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var body bytes.Buffer
+	_, err = io.Copy(&body, resp.Body)
+	if err != nil {
+		return []byte{}, fmt.Errorf("reading response body: %w", err)
+	}
+
+	return body.Bytes(), nil
+}
+
+func getMD5Hash(body []byte) string {
 	hasher := md5.New()
-	hasher.Write([]byte(text))
+	hasher.Write(body)
 	return hex.EncodeToString(hasher.Sum(nil))
 }
