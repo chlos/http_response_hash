@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+http_response_hash
 
 # Test binary, built with `go test -c`
 *.test
