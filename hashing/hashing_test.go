@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	_testURL1     = "http://www.adjust.com"
+	_testURL1     = "https://www.reddit.com/"
 	_testURL2     = "http://google.com"
 	_testHTTPBody = "Test HTTP body"
 )
