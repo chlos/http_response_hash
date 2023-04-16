@@ -1,6 +1,7 @@
 package hashing
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -91,3 +92,78 @@ func TestNewHashing(t *testing.T) {
 	}
 
 }
+func _getHTTPBodyMock(url string) ([]byte, error) {
+	return []byte("Test HTTP body"), nil
+}
+
+func _getHTTPBodyMockError(url string) ([]byte, error) {
+	return []byte{}, errors.New("test error")
+}
+
+func TestStart(t *testing.T) {
+	tests := []struct {
+		testcase         string
+		urls             []string
+		httpRequestFails bool
+		expectedHashes   int
+	}{
+		{
+			testcase:         "urls 0 - http ok",
+			urls:             []string{},
+			httpRequestFails: false,
+			expectedHashes:   0,
+		},
+		{
+			testcase:         "urls 1 - http ok",
+			urls:             []string{_testURL1},
+			httpRequestFails: false,
+			expectedHashes:   1,
+		},
+		{
+			testcase:         "urls 2 - http ok",
+			urls:             []string{_testURL1, _testURL2},
+			httpRequestFails: false,
+			expectedHashes:   2,
+		},
+
+		{
+			testcase:         "urls 0 - http fails",
+			urls:             []string{},
+			httpRequestFails: true,
+			expectedHashes:   0,
+		},
+		{
+			testcase:         "urls 1 - http fails",
+			urls:             []string{_testURL1},
+			httpRequestFails: true,
+			expectedHashes:   0,
+		},
+		{
+			testcase:         "urls 2 - http fails",
+			urls:             []string{_testURL1, _testURL2},
+			httpRequestFails: true,
+			expectedHashes:   0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.testcase, func(t *testing.T) {
+			if tt.httpRequestFails {
+				getHTTPBody = _getHTTPBodyMockError
+			} else {
+				getHTTPBody = _getHTTPBodyMock
+			}
+
+			h, _ := NewHashing(10, tt.urls)
+			h.Start()
+			actualHashes := 0
+			for range h.hashCh {
+				actualHashes++
+			}
+
+			require.Equal(t, tt.expectedHashes, actualHashes)
+		})
+	}
+}
+
+// TODO: add tests for the parallel limit

@@ -11,6 +11,10 @@ import (
 	"sync"
 )
 
+var (
+	getHTTPBody = _getHTTPBody
+)
+
 type Hashing struct {
 	ParallelLimit int
 	URLs          []string
@@ -70,7 +74,7 @@ func (h *Hashing) hashHTTPBody(url string, waitCh <-chan struct{}, wg *sync.Wait
 	h.hashCh <- responseHash
 }
 
-func getHTTPBody(url string) ([]byte, error) {
+func _getHTTPBody(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return []byte{}, fmt.Errorf("running GET request: %w", err)
