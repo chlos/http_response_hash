@@ -1,3 +1,6 @@
+// http_response_hash is a tool which makes http requests and prints the address of the request along with the MD5 hash
+// of the response.
+
 package main
 
 import (

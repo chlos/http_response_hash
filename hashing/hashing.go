@@ -12,15 +12,19 @@ import (
 )
 
 var (
+	// getHTTPBody defines a function which should be used for getting HTTP body (production/test mock/etc).
 	getHTTPBody = _getHTTPBody
 )
 
+// Hashing makes http requests and prints the address of the request along with the MD5 hash of the response.
 type Hashing struct {
 	ParallelLimit int
 	URLs          []string
 	hashCh        chan string
 }
 
+// NewHashing is a constructor of Hashing.
+// It also checks the parallel limit and returns error in case of a wrong limit.
 func NewHashing(limit int, urls []string) (*Hashing, error) {
 	if limit < 1 {
 		return nil, errors.New("parallel limit must be >= 1")
@@ -32,6 +36,7 @@ func NewHashing(limit int, urls []string) (*Hashing, error) {
 	}, nil
 }
 
+// Start makes HTTP requests and calculate responses' HD5 hashes. It sends the result to the hashCh channel.
 func (h *Hashing) Start() {
 	// run the pool of goroutines
 	var wg sync.WaitGroup
@@ -52,12 +57,14 @@ func (h *Hashing) Start() {
 	}()
 }
 
+// Print prints the address of the request along with the MD5 hash of the response.
 func (h *Hashing) Print() {
 	for hash := range h.hashCh {
 		fmt.Println(hash)
 	}
 }
 
+// hashHTTPBody makes a HTTP request, calculates the response's hash and sends it to hashCh channel.
 func (h *Hashing) hashHTTPBody(url string, waitCh <-chan struct{}, wg *sync.WaitGroup) {
 	defer func() {
 		wg.Done()
@@ -74,6 +81,7 @@ func (h *Hashing) hashHTTPBody(url string, waitCh <-chan struct{}, wg *sync.Wait
 	h.hashCh <- responseHash
 }
 
+// _getHTTPBody makes a HTTP request using the specified URL and returns the response's body.
 func _getHTTPBody(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -90,6 +98,7 @@ func _getHTTPBody(url string) ([]byte, error) {
 	return body.Bytes(), nil
 }
 
+// getMD5Hash calculates and returns the MD5 hash of a body.
 func getMD5Hash(body []byte) string {
 	hasher := md5.New()
 	hasher.Write(body)
