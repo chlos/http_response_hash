@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,10 @@ type Hashing struct {
 }
 
 func NewHashing(limit int, urls []string) (*Hashing, error) {
+	if limit < 1 {
+		return nil, errors.New("parallel limit must be >= 1")
+	}
+
 	return &Hashing{
 		ParallelLimit: limit,
 		URLs:          urls,
