@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	_testURL1 = "http://www.adjust.com"
-	_testURL2 = "http://google.com"
+	_testURL1     = "http://www.adjust.com"
+	_testURL2     = "http://google.com"
+	_testHTTPBody = "Test HTTP body"
 )
 
 func TestNewHashing(t *testing.T) {
@@ -93,7 +94,7 @@ func TestNewHashing(t *testing.T) {
 
 }
 func _getHTTPBodyMock(url string) ([]byte, error) {
-	return []byte("Test HTTP body"), nil
+	return []byte(_testHTTPBody), nil
 }
 
 func _getHTTPBodyMockError(url string) ([]byte, error) {
@@ -157,8 +158,12 @@ func TestStart(t *testing.T) {
 			h, _ := NewHashing(10, tt.urls)
 			h.Start()
 			actualHashes := 0
-			for range h.hashCh {
+			for result := range h.hashCh {
 				actualHashes++
+
+				if !tt.httpRequestFails {
+					require.Equal(t, getMD5Hash([]byte(_testHTTPBody)), result.hash)
+				}
 			}
 
 			require.Equal(t, tt.expectedHashes, actualHashes)
