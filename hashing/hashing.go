@@ -37,7 +37,7 @@ func (h *Hashing) Start() {
 	go func() {
 		for _, url := range h.URLs {
 			waitPoolCh <- struct{}{} // loop is blocked if we have reached max num of running goroutines
-			go h.hashURL(url, waitPoolCh, &wg)
+			go h.hashHTTPBody(url, waitPoolCh, &wg)
 		}
 	}()
 
@@ -54,7 +54,7 @@ func (h *Hashing) Print() {
 	}
 }
 
-func (h *Hashing) hashURL(url string, waitCh <-chan struct{}, wg *sync.WaitGroup) {
+func (h *Hashing) hashHTTPBody(url string, waitCh <-chan struct{}, wg *sync.WaitGroup) {
 	defer func() {
 		wg.Done()
 		<-waitCh
