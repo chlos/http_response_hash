@@ -26,9 +26,12 @@ type urlHash struct {
 
 // Hashing makes http requests and prints the address of the request along with the MD5 hash of the response.
 type Hashing struct {
+	// ParallelLimit is a value for the number of parallel requests.
 	ParallelLimit int
-	URLs          []string
-	hashCh        chan urlHash
+	// URLs is a slice of URLs of websites which should be hashed.
+	URLs []string
+	// hashCh is a channel for urlHash results.
+	hashCh chan urlHash
 }
 
 // NewHashing is a constructor of Hashing.
