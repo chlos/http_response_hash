@@ -16,11 +16,19 @@ var (
 	getHTTPBody = _getHTTPBody
 )
 
+// urlHash is a struct where the result of each URL hashing is stored.
+type urlHash struct {
+	// url is the current website's URL.
+	url string
+	// hash is a MD5 hash of the current URL's HTTP response body.
+	hash string
+}
+
 // Hashing makes http requests and prints the address of the request along with the MD5 hash of the response.
 type Hashing struct {
 	ParallelLimit int
 	URLs          []string
-	hashCh        chan string
+	hashCh        chan urlHash
 }
 
 // NewHashing is a constructor of Hashing.
@@ -42,7 +50,7 @@ func (h *Hashing) Start() {
 	var wg sync.WaitGroup
 	wg.Add(len(h.URLs))
 	waitPoolCh := make(chan struct{}, h.ParallelLimit) // limit the number of parallel goroutines
-	h.hashCh = make(chan string, h.ParallelLimit)
+	h.hashCh = make(chan urlHash, h.ParallelLimit)
 	go func() {
 		for _, url := range h.URLs {
 			waitPoolCh <- struct{}{} // loop is blocked if we have reached max num of running goroutines
@@ -59,8 +67,8 @@ func (h *Hashing) Start() {
 
 // Print prints the address of the request along with the MD5 hash of the response.
 func (h *Hashing) Print() {
-	for hash := range h.hashCh {
-		fmt.Println(hash)
+	for item := range h.hashCh {
+		fmt.Println(item.url, item.hash)
 	}
 }
 
@@ -78,7 +86,7 @@ func (h *Hashing) hashHTTPBody(url string, waitCh <-chan struct{}, wg *sync.Wait
 	}
 	responseHash := getMD5Hash(body)
 
-	h.hashCh <- responseHash
+	h.hashCh <- urlHash{url: url, hash: responseHash}
 }
 
 // _getHTTPBody makes a HTTP request using the specified URL and returns the response's body.
